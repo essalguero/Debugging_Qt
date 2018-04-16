@@ -69,15 +69,23 @@ void MainWindow::onItemAdded()
 void MainWindow::calculatePerformedTasks()
 {
     int numberItems = 0;
-    for (int i = 0; i < ui->lWidgetTareas->count(); ++i)
-    {
-        QListWidgetItem* item = ui->lWidgetTareas->item(i);
-        if (item->font().strikeOut())
-            numberItems++;
-    }
+    int totalNumberItems = ui->lWidgetTareas->count();
 
-    float valueToSet = (float)numberItems / (float)ui->lWidgetTareas->count();
-    ui->pBarProgress->setValue((int)(valueToSet * 100));
+    if (0 == totalNumberItems)
+        ui->pBarProgress->setValue(0);
+    else
+    {
+        for (int i = 0; i < totalNumberItems; ++i)
+        {
+            QListWidgetItem* item = ui->lWidgetTareas->item(i);
+            if (item->font().strikeOut())
+                numberItems++;
+        }
+
+
+        float valueToSet = (float)numberItems / totalNumberItems;
+        ui->pBarProgress->setValue((int)(valueToSet * 100));
+    }
 }
 
 void MainWindow::on_push_pButtonDelete()
