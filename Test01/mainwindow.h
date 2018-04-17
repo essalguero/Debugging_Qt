@@ -8,6 +8,10 @@
 
 #include <QListWidgetItem>
 
+#include <list>
+
+#include "accion.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -37,6 +41,9 @@ private:
     std::string lastDeletedText = "";
     bool lastDeletedComplete = false;
     bool undone = false;
+
+    std::list<Accion> undoList;
+    std::list<Accion> redoList;
 
     void calculatePerformedTasks();
 

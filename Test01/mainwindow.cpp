@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include "accion.h"
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -62,6 +64,14 @@ void MainWindow::onItemAdded()
     {
         ui->lWidgetTareas->addItem(ui->lEditTarea->text());
 
+        Accion newAction;
+
+        newAction.accionString = ui->lEditTarea->text().toStdString();
+        newAction.completed = false;
+        newAction.listIndex = ui->lWidgetTareas->count() - 1;
+
+        undoList.push_front(newAction);
+
         calculatePerformedTasks();
     }
 }
@@ -94,17 +104,27 @@ void MainWindow::on_push_pButtonDelete()
     {
         QListWidgetItem* itemToDelete = ui->lWidgetTareas->selectedItems().at(0);
 
+        Accion deletedAction;
 
-        lastDeletedIndex = ui->lWidgetTareas->row(itemToDelete);
+        deletedAction.accionString = itemToDelete->text().toStdString();
+        deletedAction.completed = itemToDelete->font().strikeOut();
+        deletedAction.listIndex = ui->lWidgetTareas->row(itemToDelete);
+        deletedAction.actionPerformed = "delete";
+
+        /*lastDeletedIndex = ui->lWidgetTareas->row(itemToDelete);
         lastDeletedText = itemToDelete->text().toStdString();
         lastDeletedComplete = itemToDelete->font().strikeOut();
+        */
+
         ui->lWidgetTareas->takeItem(ui->lWidgetTareas->row(itemToDelete));
 
         ui->lWidgetTareas->removeItemWidget(itemToDelete);
 
         delete itemToDelete;
 
-        undone = false;
+        undoList.push_front(deletedAction);
+
+        //undone = false;
 
         ui->actionRedo->setEnabled(false);
         ui->actionUndo->setEnabled(true);
@@ -185,7 +205,7 @@ void MainWindow::on_triggered_Redo()
 
 void MainWindow::on_triggered_Undo()
 {
-    if (lastDeletedIndex != -1 && !undone)
+    /*if (lastDeletedIndex != -1 && !undone)
     {
         ui->lWidgetTareas->insertItem(lastDeletedIndex, QString::fromStdString(lastDeletedText));
        // ui->lWidgetTareas->addItem(QString::fromStdString(lastDeletedText));
@@ -206,6 +226,58 @@ void MainWindow::on_triggered_Undo()
 
         calculatePerformedTasks();
 
+    }*/
+
+    std::cout << "Undo Action raised" << std::endl;
+
+    if (undoList.size() != 0)
+    {
+        Accion undoneAction = undoList.front();
+        std::cout << "Action from list: " << undoneAction.actionPerformed << " -> " << undoneAction.accionString << std::endl;
+
+        if (undoneAction.actionPerformed == "insert")
+        {
+            std::cout << "Undoing Insert" << std::endl;
+
+            ui->lWidgetTareas->takeItem(undoneAction.listIndex);
+        }
+        else if (undoneAction.actionPerformed == "delete")
+        {
+           std::cout << "Undoing Delete" << std::endl;
+
+           //QListWidgetItem newItem;
+           //QString textString;
+           //textString.fromStdString(undoneAction.accionString);
+           //newItem.setText(textString);
+
+           std::cout << "Inserting item in position: "<<  undoneAction.accionString << " " << undoneAction.listIndex << std::endl;
+           QString stringToInsert;
+           stringToInsert = stringToInsert.fromStdString(undoneAction.accionString);
+
+           ui->lWidgetTareas->insertItem(undoneAction.listIndex, stringToInsert);
+
+           if (undoneAction.completed)
+           {
+               std::cout << "Action was completed" << std::endl;
+               QListWidgetItem *itemIngested = ui->lWidgetTareas->item(undoneAction.listIndex);
+
+               QFont doneFont = itemIngested->font();
+               doneFont.setStrikeOut(true);
+               itemIngested->setFont(doneFont);
+           }
+
+
+
+
+        }
+
+        redoList.push_front(undoneAction);
+        undoList.pop_front();
+
+        calculatePerformedTasks();
+    } else {
+
+        std::cout << "Undo action list is empty" << std::endl;
     }
 
 
