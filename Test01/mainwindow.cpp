@@ -57,25 +57,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-
-void MainWindow::onItemAdded()
-{
-    if (ui->lEditTarea->text() != "")
-    {
-        ui->lWidgetTareas->addItem(ui->lEditTarea->text());
-
-        Accion newAction;
-
-        newAction.accionString = ui->lEditTarea->text().toStdString();
-        newAction.completed = false;
-        newAction.listIndex = ui->lWidgetTareas->count() - 1;
-
-        undoList.push_front(newAction);
-
-        calculatePerformedTasks();
-    }
-}
-
 void MainWindow::calculatePerformedTasks()
 {
     int numberItems = 0;
@@ -97,6 +78,32 @@ void MainWindow::calculatePerformedTasks()
         ui->pBarProgress->setValue((int)(valueToSet * 100));
     }
 }
+
+void MainWindow::onItemAdded()
+{
+    if (ui->lEditTarea->text() != "")
+    {
+        ui->lWidgetTareas->addItem(ui->lEditTarea->text());
+
+        Accion newAction;
+
+        newAction.accionString = ui->lEditTarea->text().toStdString();
+         newAction.actionPerformed = "insert";
+        newAction.completed = false;
+        newAction.listIndex = ui->lWidgetTareas->count() - 1;
+
+        undoList.push_front(newAction);
+
+        ui->actionRedo->setEnabled(false);
+        ui->actionUndo->setEnabled(true);
+
+        //Remove items from redo list
+        redoList.clear();
+
+        calculatePerformedTasks();
+    }
+}
+
 
 void MainWindow::on_push_pButtonDelete()
 {
@@ -124,10 +131,12 @@ void MainWindow::on_push_pButtonDelete()
 
         undoList.push_front(deletedAction);
 
-        //undone = false;
-
         ui->actionRedo->setEnabled(false);
         ui->actionUndo->setEnabled(true);
+
+        //Remove items from redo list
+        redoList.clear();
+
 
         calculatePerformedTasks();
     }
@@ -184,9 +193,12 @@ void MainWindow::on_triggered_Quit()
 void MainWindow::on_triggered_Redo()
 {
     //ui->lWidgetTareas->removeItemWidget(lastDeletedItem);
-    if (lastDeletedIndex != -1 && undone)
+
+    std::cout << "Undo Action raised" << std::endl;
+
+    if (redoList.size() > 0)
     {
-        QListWidgetItem* itemToDelete = ui->lWidgetTareas->item(lastDeletedIndex);
+        /*QListWidgetItem* itemToDelete = ui->lWidgetTareas->item(lastDeletedIndex);
 
         ui->lWidgetTareas->takeItem(ui->lWidgetTareas->row(itemToDelete));
 
@@ -197,7 +209,43 @@ void MainWindow::on_triggered_Redo()
         undone = false;
 
         ui->actionRedo->setEnabled(false);
+        ui->actionUndo->setEnabled(true);*/
+
+        Accion redoneAction = redoList.front();
+
+        if (redoneAction.actionPerformed == "insert")
+        {
+            std::cout << "Inserting item in position: "<<  redoneAction.accionString << " " << redoneAction.listIndex << std::endl;
+            QString stringToInsert;
+            stringToInsert = stringToInsert.fromStdString(redoneAction.accionString);
+
+            ui->lWidgetTareas->insertItem(redoneAction.listIndex, stringToInsert);
+
+            if (redoneAction.completed)
+            {
+                std::cout << "Action was completed" << std::endl;
+                QListWidgetItem *itemIngested = ui->lWidgetTareas->item(redoneAction.listIndex);
+
+                QFont doneFont = itemIngested->font();
+                doneFont.setStrikeOut(true);
+                itemIngested->setFont(doneFont);
+            }
+        }
+        else if (redoneAction.actionPerformed == "delete")
+        {
+            ui->lWidgetTareas->takeItem(redoneAction.listIndex);
+        }
+
+        undoList.push_front(redoneAction);
+        redoList.pop_front();
+
+        if (redoList.size() == 0)
+            ui->actionRedo->setEnabled(false);
+
         ui->actionUndo->setEnabled(true);
+
+
+
 
         calculatePerformedTasks();
     }
@@ -273,6 +321,11 @@ void MainWindow::on_triggered_Undo()
 
         redoList.push_front(undoneAction);
         undoList.pop_front();
+
+        if (undoList.size() == 0)
+            ui->actionUndo->setEnabled(false);
+
+        ui->actionRedo->setEnabled(true);
 
         calculatePerformedTasks();
     } else {
