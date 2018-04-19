@@ -5,26 +5,27 @@
 
 #include "accion.h"
 
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    QObject::connect(ui->pButtonAdd,SIGNAL(clicked()), this, SLOT(onItemAdded()));
+    QObject::connect(ui->pButtonAdd, SIGNAL(clicked(bool)), this, SLOT(onItemAdded()));
 
-    QObject::connect(ui->pButtonDelete,SIGNAL(clicked()), this, SLOT(on_push_pButtonDelete()));
+    QObject::connect(ui->pButtonDelete, SIGNAL(clicked(bool)), this, SLOT(on_push_pButtonDelete()));
 
-    QObject::connect(ui->pButtonComplete,SIGNAL(clicked()), this, SLOT(on_push_pButtonComplete()));
+    QObject::connect(ui->pButtonComplete,SIGNAL(clicked(bool)), this, SLOT(on_push_pButtonComplete()));
 
-    QObject::connect(ui->pButtonEdit,SIGNAL(clicked()), this, SLOT(on_push_pButtonEdit()));
+    QObject::connect(ui->pButtonEdit,SIGNAL(clicked(bool)), this, SLOT(on_push_pButtonEdit()));
 
 
-    QObject::connect(ui->actionQuit,SIGNAL(triggered(bool)), this, SLOT(on_triggered_Quit()));
+    QObject::connect(ui->actionQuit, SIGNAL(triggered(bool)), this, SLOT(on_triggered_Quit()));
 
-    QObject::connect(ui->actionUndo,SIGNAL(triggered(bool)), this, SLOT(on_triggered_Undo()));
+    QObject::connect(ui->actionUndo, SIGNAL(triggered(bool)), this, SLOT(on_triggered_Undo()));
 
-    QObject::connect(ui->actionRedo,SIGNAL(triggered(bool)), this, SLOT(on_triggered_Redo()));
+    QObject::connect(ui->actionRedo, SIGNAL(triggered(bool)), this, SLOT(on_triggered_Redo()));
 
 }
 
@@ -334,7 +335,4 @@ void MainWindow::on_triggered_Undo()
     }
 
 
-
-
 }
-
