@@ -42,6 +42,8 @@ private:
     bool lastDeletedComplete = false;
     bool undone = false;
 
+    const int MAX_UNDO = 100;
+
     std::list<Accion> undoList;
     std::list<Accion> redoList;
 

@@ -12,6 +12,9 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+
+    //Crear las conexiones con los slots correspondientes
+
     QObject::connect(ui->pButtonAdd, SIGNAL(clicked(bool)), this, SLOT(onItemAdded()));
 
     QObject::connect(ui->pButtonDelete, SIGNAL(clicked(bool)), this, SLOT(on_push_pButtonDelete()));
@@ -101,6 +104,10 @@ void MainWindow::onItemAdded()
         //Remove items from redo list
         redoList.clear();
 
+        // Check if maxCapacity have been reached
+        if (undoList.size() > MAX_UNDO)
+            undoList.pop_back();
+
         calculatePerformedTasks();
     }
 }
@@ -118,11 +125,6 @@ void MainWindow::on_push_pButtonDelete()
         deletedAction.completed = itemToDelete->font().strikeOut();
         deletedAction.listIndex = ui->lWidgetTareas->row(itemToDelete);
         deletedAction.actionPerformed = "delete";
-
-        /*lastDeletedIndex = ui->lWidgetTareas->row(itemToDelete);
-        lastDeletedText = itemToDelete->text().toStdString();
-        lastDeletedComplete = itemToDelete->font().strikeOut();
-        */
 
         ui->lWidgetTareas->takeItem(ui->lWidgetTareas->row(itemToDelete));
 
@@ -193,30 +195,14 @@ void MainWindow::on_triggered_Quit()
 
 void MainWindow::on_triggered_Redo()
 {
-    //ui->lWidgetTareas->removeItemWidget(lastDeletedItem);
-
-    std::cout << "Undo Action raised" << std::endl;
 
     if (redoList.size() > 0)
     {
-        /*QListWidgetItem* itemToDelete = ui->lWidgetTareas->item(lastDeletedIndex);
-
-        ui->lWidgetTareas->takeItem(ui->lWidgetTareas->row(itemToDelete));
-
-        ui->lWidgetTareas->removeItemWidget(itemToDelete);
-
-        delete itemToDelete;
-
-        undone = false;
-
-        ui->actionRedo->setEnabled(false);
-        ui->actionUndo->setEnabled(true);*/
 
         Accion redoneAction = redoList.front();
 
         if (redoneAction.actionPerformed == "insert")
         {
-            std::cout << "Inserting item in position: "<<  redoneAction.accionString << " " << redoneAction.listIndex << std::endl;
             QString stringToInsert;
             stringToInsert = stringToInsert.fromStdString(redoneAction.accionString);
 
@@ -224,7 +210,6 @@ void MainWindow::on_triggered_Redo()
 
             if (redoneAction.completed)
             {
-                std::cout << "Action was completed" << std::endl;
                 QListWidgetItem *itemIngested = ui->lWidgetTareas->item(redoneAction.listIndex);
 
                 QFont doneFont = itemIngested->font();
@@ -245,79 +230,35 @@ void MainWindow::on_triggered_Redo()
 
         ui->actionUndo->setEnabled(true);
 
-
-
-
         calculatePerformedTasks();
     }
 }
 
 void MainWindow::on_triggered_Undo()
 {
-    /*if (lastDeletedIndex != -1 && !undone)
-    {
-        ui->lWidgetTareas->insertItem(lastDeletedIndex, QString::fromStdString(lastDeletedText));
-       // ui->lWidgetTareas->addItem(QString::fromStdString(lastDeletedText));
-        undone = true;
-
-        if (lastDeletedComplete)
-        {
-            QListWidgetItem* addedItem = ui->lWidgetTareas->item(lastDeletedIndex);
-            QFont newFont = addedItem->font();
-
-            newFont.setStrikeOut(true);
-
-            addedItem->setFont(newFont);
-        }
-
-        ui->actionRedo->setEnabled(true);
-        ui->actionUndo->setEnabled(false);
-
-        calculatePerformedTasks();
-
-    }*/
-
-    std::cout << "Undo Action raised" << std::endl;
-
     if (undoList.size() != 0)
     {
         Accion undoneAction = undoList.front();
-        std::cout << "Action from list: " << undoneAction.actionPerformed << " -> " << undoneAction.accionString << std::endl;
 
         if (undoneAction.actionPerformed == "insert")
         {
-            std::cout << "Undoing Insert" << std::endl;
-
             ui->lWidgetTareas->takeItem(undoneAction.listIndex);
         }
         else if (undoneAction.actionPerformed == "delete")
         {
-           std::cout << "Undoing Delete" << std::endl;
-
-           //QListWidgetItem newItem;
-           //QString textString;
-           //textString.fromStdString(undoneAction.accionString);
-           //newItem.setText(textString);
-
-           std::cout << "Inserting item in position: "<<  undoneAction.accionString << " " << undoneAction.listIndex << std::endl;
-           QString stringToInsert;
+          QString stringToInsert;
            stringToInsert = stringToInsert.fromStdString(undoneAction.accionString);
 
            ui->lWidgetTareas->insertItem(undoneAction.listIndex, stringToInsert);
 
            if (undoneAction.completed)
            {
-               std::cout << "Action was completed" << std::endl;
                QListWidgetItem *itemIngested = ui->lWidgetTareas->item(undoneAction.listIndex);
 
                QFont doneFont = itemIngested->font();
                doneFont.setStrikeOut(true);
                itemIngested->setFont(doneFont);
            }
-
-
-
-
         }
 
         redoList.push_front(undoneAction);
@@ -329,10 +270,6 @@ void MainWindow::on_triggered_Undo()
         ui->actionRedo->setEnabled(true);
 
         calculatePerformedTasks();
-    } else {
-
-        std::cout << "Undo action list is empty" << std::endl;
     }
-
 
 }
